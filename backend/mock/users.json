@@ -1,0 +1,29 @@
+[
+    {
+        "name": "Alice Organizer",
+        "email": "alice@org.com",
+        "role": "organizer",
+        "homeLocation": {
+            "lat": 3.139,
+            "lng": 101.6869
+        }
+    },
+    {
+        "name": "Bob Organizer",
+        "email": "bob@org.com",
+        "role": "organizer",
+        "homeLocation": {
+            "lat": 3.150,
+            "lng": 101.6958
+        }
+    },
+    {
+        "name": "Charlie Participant",
+        "email": "charlie@part.com",
+        "role": "participant",
+        "homeLocation": {
+            "lat": 3.142,
+            "lng": 101.6900
+        }
+    }
+]

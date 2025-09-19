@@ -1,29 +1,93 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import * as React from "react";
+import { Provider as PaperProvider } from "react-native-paper";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createDrawerNavigator } from "@react-navigation/drawer";
+import { AuthProvider, useAuth } from "./src/utils/context/AuthContext";
+import { en, registerTranslation } from "react-native-paper-dates";
+import { MaterialIcons } from "@expo/vector-icons";
+import Home from "./Home";
+import CreateEvent from "./CreateEvent";
+import Profile from "./Profile";
+import Login from "./Login";
+import EventDetail from "./EventDetail";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+registerTranslation("en", en);
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+function Tabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: true,
+        tabBarActiveTintColor: "#1976d2",
+      }}
+    >
+      <Tab.Screen
+        name="Home"
+        component={Home}
+        options={{
+          tabBarLabel: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="home" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="CreateEvent"
+        component={CreateEvent}
+        options={{
+          tabBarLabel: "Create",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="add-circle-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={Profile}
+        options={{
+          tabBarLabel: "Profile",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" color={color} size={size} />
+          ),
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+// ---------------- ROOT ----------------
+function Root() {
+  const { user } = useAuth();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <PaperProvider>
+      <Drawer.Navigator screenOptions={{ headerShown: false }}>
+        {!user ? (
+          // If no user → show login screen only
+          <Drawer.Screen name="Login" component={Login} />
+        ) : (
+          // Else participant → show participant tabs
+          <Drawer.Screen name="Tabs" component={Tabs} />
+        )}
+        <Drawer.Screen
+          name="EventDetail"
+          component={EventDetail}
+          options={{ drawerLabel: "EventDetails", title: "Participant" }}
+        />
+      </Drawer.Navigator>
+    </PaperProvider >
+  );
+}
+
+export default function Layout() {
+  return (
+    <AuthProvider>
+      <Root />
+    </AuthProvider>
   );
 }

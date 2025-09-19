@@ -1,0 +1,23 @@
+[
+    {
+        "name": "Kuala Lumpur Convention Centre",
+        "lat": 3.1579,
+        "lng": 101.7118,
+        "address": "Kuala Lumpur City Centre, 50088 KL",
+        "capacity": 200
+    },
+    {
+        "name": "MITEC",
+        "lat": 3.1833,
+        "lng": 101.6714,
+        "address": "Kompleks MITEC, KL",
+        "capacity": 500
+    },
+    {
+        "name": "University of Malaya Hall",
+        "lat": 3.1205,
+        "lng": 101.6534,
+        "address": "UM, KL",
+        "capacity": 300
+    }
+]
