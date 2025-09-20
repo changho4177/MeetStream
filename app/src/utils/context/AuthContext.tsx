@@ -35,10 +35,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = async () => {
-        setUser(null);
-        setToken(null);
-        await AsyncStorage.removeItem("user");
-        await AsyncStorage.removeItem("token");
+        try {
+            // Clear only if user exists and has valid id/role
+            if (!user || !user?.id || !user?.role) {
+                console.log("Logout called but user is already invalid/empty.");
+            }
+            setUser(null);
+            setToken(null);
+            await AsyncStorage.multiRemove(["user", "token"]);
+        } catch (err) {
+            console.warn("Logout error:", err);
+        }
     };
 
     return (

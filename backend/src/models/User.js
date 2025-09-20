@@ -7,7 +7,7 @@ const UserSchema = new mongoose.Schema({
     hash: String,
     role: { type: String, enum: ['organizer', 'participant'], default: 'participant' },
     homeLocation: { lat: Number, lng: Number },
-    pushTokens: [String] // expo push tokens
+    pushTokens: [String]
 }, { timestamps: true });
 
 export default mongoose.model('User', UserSchema);

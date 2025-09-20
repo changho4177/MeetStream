@@ -128,7 +128,7 @@ function Announcements({ eventId, user }: { eventId: string; user: any }) {
             await axios.post(`${API_URL}/api/announcements`, {
                 eventId,
                 text,
-                createdBy: user.id,
+                createdBy: user._id,
             });
             setText("");
             setDialogVisible(false);
@@ -318,7 +318,7 @@ function Files({ eventId, userId }: { eventId: string; userId: string }) {
                 visible={modalVisible}
                 onDismiss={() => setModalVisible(false)}
                 eventId={eventId}
-                userId={user.id}
+                userId={user._id}
                 onUploaded={fetchFiles} // fallback refresh
             />
 
@@ -386,43 +386,62 @@ function Chat({ eventId, user }: { eventId: string; user: any }) {
     const send = async () => {
         if (!text.trim() || !eventId) return;
 
-        const newMsg = {
-            eventId,
-            userId: user.id,
-            text,
-            createdAt: new Date(),
-            _id: `${Date.now()}`, // temporary id
-            userId: { _id: user.id, name: user.name },
-        };
+        const tempId = `${Date.now()}`;
 
         // Optimistic update
-        setMsgs((prev) => [...prev, newMsg]);
+        const optimisticMsg = {
+            _id: tempId,
+            eventId,
+            text,
+            createdAt: new Date(),
+            userId: { _id: user._id, name: user.name }, // keep same shape as populated backend
+        };
+        setMsgs((prev) => [...prev, optimisticMsg]);
         setText("");
         flatListRef.current?.scrollToEnd({ animated: true });
 
         try {
-            const { data } = await axios.post(`${API_URL}/api/chat`, newMsg);
-            // Replace temp message with server-confirmed message
+            const { data } = await axios.post(`${API_URL}/api/chat`, {
+                eventId,
+                text,
+                userId: user._id, // backend requires this
+            });
+
+            // Replace optimistic with real message
             setMsgs((prev) =>
-                prev.map((m) => (m._id === newMsg._id ? data : m))
+                prev.map((m) => (m._id === tempId ? data : m))
             );
         } catch (err) {
             console.error("Failed to send message", err);
-            setMsgs((prev) => prev.filter((m) => m._id !== newMsg._id));
+            setMsgs((prev) => prev.filter((m) => m._id !== tempId));
         }
     };
 
-    const renderItem = ({ item }: { item: any }) => (
-        <View style={{ marginVertical: 4 }}>
-            <Text style={{ fontWeight: item.userId?._id === user.id ? "bold" : "normal", color: "#333" }}>
-                {item.userId?.name || "Unknown"}: {item.text}
-            </Text>
-            <Text style={{ fontSize: 10, color: "#888" }}>
-                {dayjs(item.createdAt).format("HH:mm")}
-            </Text>
-            <Divider />
-        </View>
-    );
+    const renderItem = ({ item }: { item: any }) => {
+        // Handle both populated and plain userId
+        const sender =
+            typeof item.userId === "object"
+                ? item.userId.name
+                : item.userId === user._id
+                    ? user.name
+                    : "Unknown";
+
+        const isMe =
+            (typeof item.userId === "object" ? item.userId._id : item.userId) === user._id;
+
+        return (
+            <View style={{ marginVertical: 4 }}>
+                <Text style={{ fontWeight: isMe ? "bold" : "normal", color: "#333" }}>
+                    {sender}: {item.text}
+                </Text>
+                <Text style={{ fontSize: 10, color: "#888" }}>
+                    {dayjs(item.createdAt).format("HH:mm")}
+                </Text>
+                <Divider />
+            </View>
+        );
+    };
+
 
     return (
         <View style={{ flex: 1, padding: 12 }}>
@@ -431,24 +450,39 @@ function Chat({ eventId, user }: { eventId: string; user: any }) {
                 data={msgs}
                 keyExtractor={(i) => i._id}
                 renderItem={renderItem}
-                onEndReached={loadOlderMessages} // load older messages when scrolling top
+                onEndReached={loadOlderMessages}
                 onEndReachedThreshold={0.1}
                 ListFooterComponent={loading ? <Text>Loading...</Text> : null}
             />
-            <View style={{ flexDirection: "row", gap: 8, marginTop: 8, marginBottom: 8 }}>
+            <View
+                style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    marginTop: 8,
+                    marginBottom: 8,
+                }}
+            >
                 <TextInput
                     style={{ flex: 1 }}
                     value={text}
                     onChangeText={setText}
                     placeholder="Message…"
                 />
-                <Button mode="contained" style={{ alignContent: "center", justifyContent: "center" }} onPress={send}>
+                <Button
+                    mode="contained"
+                    style={{
+                        alignContent: "center",
+                        justifyContent: "center",
+                    }}
+                    onPress={send}
+                >
                     Send
                 </Button>
             </View>
         </View>
     );
 }
+
 
 interface Props {
     organizerIds: string[];

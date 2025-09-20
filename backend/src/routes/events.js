@@ -2,7 +2,7 @@
 import { Router } from "express";
 import Event from "../models/Event.js";
 import User from "../models/User.js";
-import Venue from "../models/Venue.js";
+import axios from "axios";
 
 const r = Router();
 
@@ -85,26 +85,47 @@ r.post("/suggest-venue", async (req, res) => {
 
         if (!orgs.length) return res.json({ venue: null });
 
+        // 1. Compute centroid
         const avgLat =
             orgs.reduce((s, u) => s + (u.homeLocation?.lat || 0), 0) / orgs.length;
         const avgLng =
             orgs.reduce((s, u) => s + (u.homeLocation?.lng || 0), 0) / orgs.length;
 
-        const venues = await Venue.find({});
-        const nearest = venues.reduce((best, v) => {
-            const d = haversine(avgLat, avgLng, v.lat, v.lng);
-            if (!best || d < best.d) return { v, d };
-            return best;
-        }, null);
+        // 2. Call Google Places API nearby search (e.g. cafes, restaurants, meeting points)
+        const radius = 3000; // search within 3km
+        const type = "point_of_interest"; // could also be 'restaurant', 'cafe', 'park' etc.
+
+        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${avgLat},${avgLng}&radius=${radius}&type=${type}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+
+        const response = await axios.get(url);
+        const pois = response.data.results;
+
+        if (!pois.length) {
+            return res.json({
+                centroid: { lat: avgLat, lng: avgLng },
+                suggested: null,
+            });
+        }
+
+        // 3. Pick the closest POI (Google already sorts by distance if no rankby=distance)
+        const nearest = pois[0];
 
         res.json({
             centroid: { lat: avgLat, lng: avgLng },
-            suggested: nearest?.v || null,
+            suggested: {
+                name: nearest.name,
+                lat: nearest.geometry.location.lat,
+                lng: nearest.geometry.location.lng,
+                address: nearest.vicinity,
+                placeId: nearest.place_id,
+            },
         });
     } catch (err) {
+        console.error("Error suggesting venue:", err);
         res.status(500).json({ message: err.message });
     }
 });
+
 
 // PATCH /api/events/:id/participate -> add participant to event
 r.post("/:id/participate", async (req, res) => {
@@ -160,7 +181,7 @@ r.delete("/:id", async (req, res) => {
 
         // Check if user is one of the organizers
         const isOrganizer = event.organizerIds.some(
-            (orgId) => orgId.toString() === userId
+            (orgId) => orgId?.toString() === userId
         );
 
         if (!isOrganizer) {
