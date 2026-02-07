@@ -15,22 +15,19 @@ export default function Home({ navigation }: any) {
     const { user } = useAuth();
     const [events, setEvents] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [loadingEvent, setLoadingEvent] = useState<string | null>(null); // ✅ track event in progress
+    const [loadingEvent, setLoadingEvent] = useState<string | null>(null);
 
     const addToCalendar = async (ev: any) => {
         try {
-            // ✅ Ask permission
             const { status } = await Calendar.requestCalendarPermissionsAsync();
             if (status !== "granted") {
                 alert("Permission to access calendar was denied");
                 return;
             }
 
-            // ✅ Get all calendars
             const calendars = await Calendar.getCalendarsAsync(Calendar.EntityTypes.EVENT);
             console.log("Available calendars:", calendars);
 
-            // ✅ Prefer Google calendar (or the first writable one)
             let calendar = calendars.find(
                 (c) =>
                     c.allowsModifications &&
@@ -48,7 +45,6 @@ export default function Home({ navigation }: any) {
                 return;
             }
 
-            // ✅ Create event in that calendar
             const eventId = await Calendar.createEventAsync(calendar.id, {
                 title: ev.title,
                 startDate: new Date(ev.start),
@@ -77,7 +73,6 @@ export default function Home({ navigation }: any) {
         }
     };
 
-    // ✅ Refresh whenever screen is focused
     useFocusEffect(
         useCallback(() => {
             fetchEvents();
@@ -97,7 +92,7 @@ export default function Home({ navigation }: any) {
         if (!user) return; // prevent null crashes
 
         try {
-            setLoadingEvent(eventId); // ✅ mark this event as loading
+            setLoadingEvent(eventId);
 
             const action = isParticipating ? "leave" : "participate";
             const res = await axios.post(`${API_URL}/api/events/${eventId}/${action}`, {
@@ -112,7 +107,7 @@ export default function Home({ navigation }: any) {
         } catch (err) {
             console.error("Participation failed", err);
         } finally {
-            setLoadingEvent(null); // ✅ reset after done
+            setLoadingEvent(null);
         }
     };
 
