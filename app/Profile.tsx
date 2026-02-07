@@ -17,7 +17,7 @@ const Profile = () => {
             ? user.homeLocation
             : defaultLocation
     );
-    const [homeAddress, setHomeAddress] = useState(user?.homeAddress || ""); // 👈 new state
+    const [homeAddress, setHomeAddress] = useState(user?.homeAddress || "");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
@@ -54,7 +54,7 @@ const Profile = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ name, role, homeLocation, homeAddress }), // 👈 include address
+                body: JSON.stringify({ name, role, homeLocation, homeAddress }),
             });
 
             const data = await res.json();
@@ -83,7 +83,6 @@ const Profile = () => {
         setHomeLocation(coords);
         await reverseGeocode(coords);
 
-        // 👇 Animate map to new region
         mapRef.current?.animateToRegion(
             {
                 latitude: coords.lat,
@@ -91,7 +90,7 @@ const Profile = () => {
                 latitudeDelta: 0.01,
                 longitudeDelta: 0.01,
             },
-            1000 // animation duration (ms)
+            1000
         );
     };
 
@@ -144,7 +143,6 @@ const Profile = () => {
                             style={styles.input}
                         />
 
-                        {/* 👇 New input for Home Address */}
                         <TextInput
                             label="Home Address"
                             value={homeAddress}
@@ -155,7 +153,7 @@ const Profile = () => {
 
                         <Text style={{ marginBottom: 8 }}>Home Location:</Text>
                         <MapView
-                            ref={mapRef}   // 👈 attach ref
+                            ref={mapRef}
                             style={styles.map}
                             initialRegion={{
                                 latitude: homeLocation.lat || defaultLocation.lat,
