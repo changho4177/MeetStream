@@ -3,7 +3,7 @@ import { router } from "expo-router";
 import React, { useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Button, Card, Text, TextInput } from "react-native-paper";
-import { Picker } from "@react-native-picker/picker";  // 👈 install this if not yet
+import { Picker } from "@react-native-picker/picker";
 import { useAuth } from "./src/utils/context/AuthContext";
 
 const Login = () => {
