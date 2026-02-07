@@ -8,7 +8,7 @@ import API_URL from "@/config";
 
 export interface FileUploadModalProps {
     visible: boolean;
-    onDismiss: () => void;   // 👈 add this
+    onDismiss: () => void;
     eventId: string;
     userId: string;
     onUploaded: () => void;
@@ -27,7 +27,7 @@ export default function FileUploadModal({
         const res = await DocumentPicker.getDocumentAsync({ type: "*/*" });
         if (res.canceled) return;
 
-        const file = res.assets[0]; // fixed type
+        const file = res.assets[0];
         const formData = new FormData();
         formData.append("file", {
             uri: file.uri,
@@ -42,7 +42,7 @@ export default function FileUploadModal({
                 headers: { "Content-Type": "multipart/form-data" },
             });
             onUploaded();
-            onDismiss(); // 👈 close after upload
+            onDismiss();
         } catch (err) {
             console.error("Upload failed", err);
         } finally {
